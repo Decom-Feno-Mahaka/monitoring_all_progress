@@ -4,7 +4,13 @@ const BACKEND = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['avatars.githubusercontent.com', 'github.com', 'localhost'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+      { protocol: 'https', hostname: 'github.com' },
+      { protocol: 'https', hostname: '*.railway.app' },
+      { protocol: 'https', hostname: '*.up.railway.app' },
+      { protocol: 'http', hostname: 'localhost' },
+    ],
   },
   async rewrites() {
     return [
@@ -13,7 +19,6 @@ const nextConfig: NextConfig = {
         destination: `${BACKEND}/api/:path*`,
       },
       {
-        // Proxy uploaded files from Next.js → NestJS backend
         source: '/uploads/:path*',
         destination: `${BACKEND}/uploads/:path*`,
       },
