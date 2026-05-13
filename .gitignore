@@ -1,0 +1,36 @@
+# ===== NODE MODULES =====
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# ===== NEXT.JS =====
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# ===== NESTJS BUILD =====
+backend/dist/
+
+# ===== ENV FILES =====
+.env
+.env.local
+.env.production
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# ===== UPLOADS =====
+backend/uploads/
+
+# ===== OS =====
+.DS_Store
+*.pem
+Thumbs.db
+
+# ===== LOGS =====
+*.log
+npm-debug.log*
+
+# ===== PRISMA =====
+# Jangan ignore prisma/migrations — tetap push ke repo

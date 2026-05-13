@@ -1,0 +1,231 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  VIEWER
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum HealthStatus {
+  ON_TRACK
+  AT_RISK
+  BEHIND
+  COMPLETED
+  ON_HOLD
+}
+
+enum ProjectCategory {
+  SOFTWARE
+  AI_ML
+  IOT
+  RESEARCH
+  DOCUMENTATION
+  DEVELOPMENT
+  INFRASTRUCTURE
+  DESIGN
+  OTHER
+}
+
+enum ProjectVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+  CANCELLED
+}
+
+enum ActivityType {
+  UPDATE
+  MILESTONE_REACHED
+  EVIDENCE_ADDED
+  STATUS_CHANGED
+  PROGRESS_UPDATE
+  NOTE
+  MEETING
+  DEPLOYMENT
+  REVIEW
+}
+
+enum EvidenceType {
+  FILE
+  LINK
+  IMAGE
+  DOCUMENT
+  VIDEO
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  password     String
+  role         Role      @default(ADMIN)
+  avatar       String?
+  isActive     Boolean   @default(true)
+  refreshToken String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  projects     Project[]   @relation("ProjectCreator")
+  activities   Activity[]
+  updatedProjects Project[] @relation("ProjectUpdater")
+
+  @@map("users")
+}
+
+model ProjectCategory_Config {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String   @default("#6366f1")
+  icon      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("project_category_configs")
+}
+
+model Project {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  description      String?
+  category         ProjectCategory   @default(SOFTWARE)
+  status           ProjectStatus     @default(PLANNING)
+  healthStatus     HealthStatus      @default(ON_TRACK)
+  visibility       ProjectVisibility @default(PUBLIC)
+  overallProgress  Int               @default(0)
+  startDate        DateTime?
+  targetDate       DateTime?
+  actualEndDate    DateTime?
+  tags             String[]          @default([])
+  coverImage       String?
+  githubRepoUrl    String?
+  githubStats      Json?
+  metadata         Json?
+  createdById      String
+  updatedById      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  createdBy        User              @relation("ProjectCreator", fields: [createdById], references: [id])
+  updatedBy        User?             @relation("ProjectUpdater", fields: [updatedById], references: [id])
+  milestones       Milestone[]
+  activities       Activity[]
+  progressSnapshots ProgressSnapshot[]
+  githubIntegration GitHubIntegration?
+
+  @@map("projects")
+}
+
+model Milestone {
+  id          String          @id @default(uuid())
+  projectId   String
+  title       String
+  description String?
+  status      MilestoneStatus @default(PENDING)
+  targetDate  DateTime?
+  actualDate  DateTime?
+  order       Int             @default(0)
+  weight      Int             @default(10)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activities  Activity[]
+
+  @@map("milestones")
+}
+
+model Activity {
+  id           String       @id @default(uuid())
+  projectId    String
+  milestoneId  String?
+  userId       String
+  type         ActivityType @default(UPDATE)
+  title        String
+  description  String?
+  progressBefore Int?
+  progressAfter  Int?
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone    Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  user         User         @relation(fields: [userId], references: [id])
+  evidences    Evidence[]
+
+  @@map("activities")
+}
+
+model Evidence {
+  id          String       @id @default(uuid())
+  activityId  String
+  type        EvidenceType @default(FILE)
+  title       String
+  description String?
+  url         String
+  fileSize    Int?
+  mimeType    String?
+  createdAt   DateTime     @default(now())
+
+  activity    Activity     @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@map("evidences")
+}
+
+model ProgressSnapshot {
+  id        String   @id @default(uuid())
+  projectId String
+  progress  Int
+  note      String?
+  takenAt   DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("progress_snapshots")
+}
+
+model GitHubIntegration {
+  id            String   @id @default(uuid())
+  projectId     String   @unique
+  owner         String
+  repo          String
+  defaultBranch String   @default("main")
+  commitCount   Int      @default(0)
+  openIssues    Int      @default(0)
+  openPRs       Int      @default(0)
+  stars         Int      @default(0)
+  lastPushedAt  DateTime?
+  lastSyncedAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("github_integrations")
+}
