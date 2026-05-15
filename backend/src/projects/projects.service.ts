@@ -66,8 +66,9 @@ export class ProjectsService {
     search?: string;
     page?: number;
     limit?: number;
+    sort?: string;
   }) {
-    const { category, status, healthStatus, visibility, search } = query;
+    const { category, status, healthStatus, visibility, search, sort } = query;
     const page = parseInt(String(query.page || 1), 10);
     const limit = parseInt(String(query.limit || 20), 10);
     const where: any = {};
@@ -84,11 +85,20 @@ export class ProjectsService {
       ];
     }
 
+    let orderBy: any = [{ overallProgress: 'asc' }, { updatedAt: 'desc' }];
+    if (sort === 'updated_desc') {
+      orderBy = { updatedAt: 'desc' };
+    } else if (sort === 'progress_desc') {
+      orderBy = [{ overallProgress: 'desc' }, { updatedAt: 'desc' }];
+    } else if (sort === 'progress_asc') {
+      orderBy = [{ overallProgress: 'asc' }, { updatedAt: 'desc' }];
+    }
+
     const [data, total] = await Promise.all([
       this.prisma.project.findMany({
         where,
         include: PROJECT_INCLUDE,
-        orderBy: { updatedAt: 'desc' },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),

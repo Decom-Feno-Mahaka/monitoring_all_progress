@@ -182,13 +182,19 @@ export default function AdminProjectDetailPage({ params }: Props) {
               style={{ accentColor: progressColor }}
             />
 
-            {/* Stat pills */}
             <div className="flex flex-wrap gap-2">
-              {daysLeft !== null && (
+              {daysLeft !== null && project.status !== 'COMPLETED' && (
                 <StatPill
                   icon={<Clock size={11} />}
                   label={daysLeft < 0 ? `${Math.abs(daysLeft)}h overdue` : `${daysLeft}h tersisa`}
                   color={daysLeft < 0 ? '#ef4444' : daysLeft < 14 ? '#f59e0b' : '#94a3b8'}
+                />
+              )}
+              {daysLeft !== null && project.status === 'COMPLETED' && (
+                <StatPill
+                  icon={<Clock size={11} />}
+                  label="Selesai"
+                  color="#00C951"
                 />
               )}
               {project.startDate && (

@@ -2,7 +2,7 @@ import {
   IsString, IsOptional, IsEnum, IsNumber, IsArray, IsUrl, IsDateString, Min, Max,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
-import { ProjectCategory, ProjectStatus, HealthStatus, ProjectVisibility } from '@prisma/client';
+import { ProjectCategory, ProjectStatus, HealthStatus, ProjectVisibility, ProjectPriority } from '@prisma/client';
 
 export class CreateProjectDto {
   @IsString()
@@ -29,6 +29,10 @@ export class CreateProjectDto {
   visibility?: ProjectVisibility;
 
   @IsOptional()
+  @IsEnum(ProjectPriority)
+  priority?: ProjectPriority;
+
+  @IsOptional()
   @IsNumber()
   @Min(0) @Max(100)
   overallProgress?: number;
@@ -40,6 +44,10 @@ export class CreateProjectDto {
   @IsOptional()
   @IsDateString()
   targetDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  actualEndDate?: string;
 
   @IsOptional()
   @IsArray()
@@ -54,8 +62,5 @@ export class CreateProjectDto {
   coverImage?: string;
 }
 
-export class UpdateProjectDto extends PartialType(CreateProjectDto) {
-  @IsOptional()
-  @IsDateString()
-  actualEndDate?: string;
-}
+export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
+

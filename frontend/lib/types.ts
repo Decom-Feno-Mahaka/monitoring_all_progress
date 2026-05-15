@@ -4,6 +4,7 @@ export type ProjectStatus = 'PLANNING' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED'
 export type HealthStatus = 'ON_TRACK' | 'AT_RISK' | 'BEHIND' | 'COMPLETED' | 'ON_HOLD';
 export type ProjectCategory = 'SOFTWARE' | 'AI_ML' | 'IOT' | 'RESEARCH' | 'DOCUMENTATION' | 'DEVELOPMENT' | 'INFRASTRUCTURE' | 'DESIGN' | 'OTHER';
 export type ProjectVisibility = 'PUBLIC' | 'INTERNAL';
+export type ProjectPriority = 'URGENT' | 'HIGH' | 'NORMAL' | 'LOW';
 export type MilestoneStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DELAYED' | 'CANCELLED';
 export type ActivityType = 'UPDATE' | 'MILESTONE_REACHED' | 'EVIDENCE_ADDED' | 'STATUS_CHANGED' | 'PROGRESS_UPDATE' | 'NOTE' | 'MEETING' | 'DEPLOYMENT' | 'REVIEW';
 export type EvidenceType = 'FILE' | 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO';
@@ -94,6 +95,7 @@ export interface Project {
   status: ProjectStatus;
   healthStatus: HealthStatus;
   visibility: ProjectVisibility;
+  priority: ProjectPriority;
   overallProgress: number;
   startDate?: string;
   targetDate?: string;
@@ -182,4 +184,11 @@ export const ACTIVITY_CONFIG: Record<ActivityType, { label: string; icon: string
   MEETING: { label: 'Meeting', icon: '🤝', color: '#8b5cf6' },
   DEPLOYMENT: { label: 'Deployment', icon: '🚀', color: '#06b6d4' },
   REVIEW: { label: 'Review', icon: '👁️', color: '#f97316' },
+};
+
+export const PRIORITY_CONFIG: Record<ProjectPriority, { label: string; color: string; badge: string }> = {
+  URGENT: { label: 'Butuh Review Segera', color: '#ef4444', badge: 'bg-[#ef4444]/15 text-[#ef4444]' },
+  HIGH: { label: 'Prioritas Utama', color: '#f59e0b', badge: 'bg-[#f59e0b]/15 text-[#f59e0b]' },
+  NORMAL: { label: 'Jalan Normal', color: '#00B9D9', badge: 'bg-[#00B9D9]/15 text-[#00B9D9]' },
+  LOW: { label: 'Prioritas Rendah', color: '#94a3b8', badge: 'bg-[#94a3b8]/15 text-[#94a3b8]' },
 };

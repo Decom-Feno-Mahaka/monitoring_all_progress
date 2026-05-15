@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ProjectCard } from '@/components/project/ProjectCard';
+
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { ActivityFeed } from '@/components/activity/ActivityFeed';
 import { projectsApi, analyticsApi } from '@/lib/api';
 import {
-  Project, DashboardStats, CATEGORY_CONFIG, HEALTH_CONFIG,
+  Project, DashboardStats, CATEGORY_CONFIG, HEALTH_CONFIG, PRIORITY_CONFIG,
   HealthStatus, ProjectCategory,
 } from '@/lib/types';
 import { FolderKanban, TrendingUp, CheckCircle2, Activity, Search, ChevronDown, X, Calendar } from 'lucide-react';
@@ -16,6 +16,11 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
+import Link from 'next/link';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { HealthBadge } from '@/components/ui/HealthBadge';
+import { CategoryBadge } from '@/components/ui/CategoryBadge';
+import { formatRelative, formatDate } from '@/lib/utils';
 
 const HEALTH_COLORS: Record<string, string> = {
   ON_TRACK: '#00C951', AT_RISK: '#f59e0b', BEHIND: '#ef4444', COMPLETED: '#00B9D9', ON_HOLD: '#94a3b8',
@@ -33,6 +38,7 @@ export default function PublicDashboard() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('ALL');
   const [health, setHealth] = useState('ALL');
+  const [sort, setSort] = useState('progress_asc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -45,6 +51,7 @@ export default function PublicDashboard() {
           ...(search && { search }),
           ...(category !== 'ALL' && { category }),
           ...(health !== 'ALL' && { healthStatus: health }),
+          sort,
           page,
           limit: 9,
         }),
@@ -59,11 +66,11 @@ export default function PublicDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [search, category, health, page]);
+  }, [search, category, health, sort, page]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const hasFilters = category !== 'ALL' || health !== 'ALL' || search;
+  const hasFilters = category !== 'ALL' || health !== 'ALL' || search || sort !== 'progress_asc';
 
   return (
     <div className="min-h-screen">
@@ -274,9 +281,21 @@ export default function PublicDashboard() {
             </select>
             <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--text-muted))] pointer-events-none" />
           </div>
+          <div className="relative">
+            <select
+              className="input-base text-sm appearance-none pr-7 cursor-pointer"
+              value={sort}
+              onChange={e => { setSort(e.target.value); setPage(1); }}
+            >
+              <option value="progress_asc">Progress (Kecil - Besar)</option>
+              <option value="progress_desc">Progress (Besar - Kecil)</option>
+              <option value="updated_desc">Update Terakhir</option>
+            </select>
+            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--text-muted))] pointer-events-none" />
+          </div>
           {hasFilters && (
             <button
-              onClick={() => { setSearch(''); setCategory('ALL'); setHealth('ALL'); setPage(1); }}
+              onClick={() => { setSearch(''); setCategory('ALL'); setHealth('ALL'); setSort('progress_asc'); setPage(1); }}
               className="btn-ghost text-xs px-3 flex items-center gap-1.5 text-red-400 hover:bg-red-500/10"
             >
               <X size={13} /> Reset filter
@@ -330,11 +349,72 @@ export default function PublicDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              className="card overflow-hidden"
             >
-              {projects.map((project, i) => (
-                <ProjectCard key={project.id} project={project} index={i} />
-              ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse table-fixed">
+                  <thead>
+                    <tr style={{ background: 'rgb(var(--surface-1))' }}>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3">Project</th>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-32">Health</th>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-32">Kategori</th>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-36">Prioritas</th>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-44">Progress</th>
+                      <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-44 hidden md:table-cell">Update Terakhir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projects.map((project, i) => (
+                      <motion.tr
+                        key={project.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        onClick={() => window.open(`/projects/${project.slug}`, '_blank')}
+                        className="group border-t border-[rgb(var(--border))] hover:bg-[rgb(var(--surface-1))] transition-colors cursor-pointer"
+                      >
+                        {/* Project name */}
+                        <td className="px-2 py-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-base flex-shrink-0">{CATEGORY_CONFIG[project.category]?.icon}</span>
+                            <div className="min-w-0">
+                              <span className="text-xs font-semibold truncate block group-hover:text-[#00B9D9] transition-colors">{project.name}</span>
+                              <span className="text-[11px] text-[rgb(var(--text-muted))] truncate block mt-0.5">{project.description || 'No description'}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Health */}
+                        <td className="px-4 py-3">
+                          <HealthBadge status={project.healthStatus} size="sm" />
+                        </td>
+
+                        {/* Category */}
+                        <td className="px-2 py-3">
+                          <CategoryBadge category={project.category} size="sm" showIcon={false} />
+                        </td>
+
+                        {/* Priority */}
+                        <td className="px-2 py-3">
+                          <span className={cn('px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider whitespace-nowrap', PRIORITY_CONFIG[project.priority]?.badge)}>
+                            {PRIORITY_CONFIG[project.priority]?.label}
+                          </span>
+                        </td>
+
+                        {/* Progress */}
+                        <td className="px-2 py-3">
+                          <ProgressBar value={project.overallProgress} showLabel size="sm" />
+                        </td>
+
+                        {/* Updated */}
+                        <td className="px-2 py-3 text-xs text-[rgb(var(--text-muted))] hidden md:table-cell">
+                          {formatRelative(project.updatedAt)}
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </motion.div>
           </AnimatePresence>
         )}

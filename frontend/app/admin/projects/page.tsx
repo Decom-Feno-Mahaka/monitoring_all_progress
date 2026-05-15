@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { projectsApi } from '@/lib/api';
-import { Project, CATEGORY_CONFIG, HEALTH_CONFIG } from '@/lib/types';
+import { Project, CATEGORY_CONFIG, HEALTH_CONFIG, PRIORITY_CONFIG } from '@/lib/types';
 import { ProjectCard } from '@/components/project/ProjectCard';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { HealthBadge } from '@/components/ui/HealthBadge';
@@ -22,6 +22,7 @@ export default function AdminProjectsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('ALL');
   const [health, setHealth] = useState('ALL');
+  const [sort, setSort] = useState('progress_asc');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -35,6 +36,7 @@ export default function AdminProjectsPage() {
         ...(search && { search }),
         ...(category !== 'ALL' && { category }),
         ...(health !== 'ALL' && { healthStatus: health }),
+        sort,
         page, limit: 12,
       });
       setProjects(res.data.data);
@@ -45,7 +47,7 @@ export default function AdminProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, category, health, page]);
+  }, [search, category, health, sort, page]);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
@@ -116,6 +118,19 @@ export default function AdminProjectsPage() {
           </select>
           <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--text-muted))] pointer-events-none" />
         </div>
+        <div className="relative">
+          <select
+            className="input-base text-xs appearance-none cursor-pointer"
+            style={{ paddingRight: '1.75rem', width: 'auto', minWidth: '8rem' }}
+            value={sort}
+            onChange={e => { setSort(e.target.value); setPage(1); }}
+          >
+            <option value="progress_asc">Progress (Kecil - Besar)</option>
+            <option value="progress_desc">Progress (Besar - Kecil)</option>
+            <option value="updated_desc">Update Terakhir</option>
+          </select>
+          <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[rgb(var(--text-muted))] pointer-events-none" />
+        </div>
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgb(var(--surface-0))' }}>
           <button onClick={() => setView('grid')} className={cn('p-2 rounded-lg transition-all', view === 'grid' ? 'bg-[#00B9D9] text-white' : 'text-[rgb(var(--text-muted))] hover:text-[rgb(var(--text-primary))]')}>
             <LayoutGrid size={16} />
@@ -178,56 +193,97 @@ export default function AdminProjectsPage() {
           </div>
         </AnimatePresence>
       ) : (
-        // List view
-        <div className="space-y-2">
-          {projects.map((project, i) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="card px-4 py-3 flex items-center gap-4 group"
-            >
-              <div className="flex-1 min-w-0 flex items-center gap-3">
-                <span className="text-xl">{CATEGORY_CONFIG[project.category]?.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{project.name}</p>
+        // Table view
+        <div className="card overflow-hidden">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr style={{ background: 'rgb(var(--surface-1))' }}>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3">Project</th>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-32">Health</th>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-32">Kategori</th>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-36">Prioritas</th>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-44">Progress</th>
+                <th className="text-left text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-44 hidden md:table-cell">Update Terakhir</th>
+                <th className="text-right text-xs font-medium text-[rgb(var(--text-muted))] px-4 py-3 w-28">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((project, i) => (
+                <motion.tr
+                  key={project.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="group border-t border-[rgb(var(--border))] hover:bg-[rgb(var(--surface-1))] transition-colors"
+                >
+                  {/* Project name */}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-base flex-shrink-0">{CATEGORY_CONFIG[project.category]?.icon}</span>
+                      <span className="text-xs truncate max-w-[220px]">{project.name}</span>
+                    </div>
+                  </td>
+
+                  {/* Health */}
+                  <td className="px-4 py-3">
                     <HealthBadge status={project.healthStatus} size="sm" />
-                  </div>
-                  <p className="text-xs text-[rgb(var(--text-muted))]">Updated {formatRelative(project.updatedAt)}</p>
-                </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-6">
-                <div className="w-28">
-                  <ProgressBar value={project.overallProgress} showLabel size="sm" />
-                </div>
-                <CategoryBadge category={project.category} size="sm" showIcon={false} />
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link
-                  href={`/admin/projects/${project.id}`}
-                  className="btn-ghost text-xs px-2 py-1.5"
-                >
-                  <Edit size={13} />
-                </Link>
-                <Link
-                  href={`/projects/${project.slug}`}
-                  target="_blank"
-                  className="btn-ghost text-xs px-2 py-1.5"
-                >
-                  <ExternalLink size={13} />
-                </Link>
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  className="btn-ghost text-xs px-2 py-1.5 text-red-400 hover:bg-red-500/10"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                  </td>
+
+                  {/* Category */}
+                  <td className="px-4 py-3">
+                    <CategoryBadge category={project.category} size="sm" showIcon={false} />
+                  </td>
+
+                  {/* Priority */}
+                  <td className="px-4 py-3">
+                    <span className={cn('px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider whitespace-nowrap', PRIORITY_CONFIG[project.priority]?.badge)}>
+                      {PRIORITY_CONFIG[project.priority]?.label}
+                    </span>
+                  </td>
+
+                  {/* Progress */}
+                  <td className="px-4 py-3">
+                    <ProgressBar value={project.overallProgress} showLabel size="sm" />
+                  </td>
+
+                  {/* Updated */}
+                  <td className="px-4 py-3 text-xs text-[rgb(var(--text-muted))] hidden md:table-cell">
+                    {formatRelative(project.updatedAt)}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link
+                        href={`/admin/projects/${project.id}`}
+                        className="btn-ghost text-xs px-2 py-1.5"
+                        title="Detail"
+                      >
+                        <Edit size={13} />
+                      </Link>
+                      <Link
+                        href={`/projects/${project.slug}`}
+                        target="_blank"
+                        className="btn-ghost text-xs px-2 py-1.5"
+                        title="Public view"
+                      >
+                        <ExternalLink size={13} />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="btn-ghost text-xs px-2 py-1.5 text-red-400 hover:bg-red-500/10"
+                        title="Hapus"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
       )}
 
       {/* Pagination */}

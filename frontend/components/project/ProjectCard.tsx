@@ -93,12 +93,14 @@ export function ProjectCard({ project, index = 0, isAdmin = false }: Props) {
             {project.targetDate && (
               <div className="flex items-center gap-1">
                 <Clock size={11} />
-                <span style={{ color: daysLeft !== null && daysLeft < 0 ? '#ef4444' : daysLeft !== null && daysLeft < 14 ? '#f59e0b' : undefined }}>
-                  {daysLeft !== null
-                    ? daysLeft < 0
-                      ? `${Math.abs(daysLeft)}d overdue`
-                      : `${daysLeft}d left`
-                    : formatDate(project.targetDate)}
+                <span style={{ color: project.status !== 'COMPLETED' && daysLeft !== null && daysLeft < 0 ? '#ef4444' : project.status !== 'COMPLETED' && daysLeft !== null && daysLeft < 14 ? '#f59e0b' : undefined }}>
+                  {project.status === 'COMPLETED'
+                    ? 'Selesai'
+                    : daysLeft !== null
+                      ? daysLeft < 0
+                        ? `${Math.abs(daysLeft)}d overdue`
+                        : `${daysLeft}d left`
+                      : formatDate(project.targetDate)}
                 </span>
               </div>
             )}
@@ -124,15 +126,15 @@ export function ProjectCard({ project, index = 0, isAdmin = false }: Props) {
 
 function getCategoryGradient(cat: string): string {
   const gradients: Record<string, string> = {
-    SOFTWARE:       'rgb(0 185 217 / 0.2), rgb(0 185 217 / 0.05)',
-    AI_ML:          'rgb(168 85 247 / 0.2), rgb(168 85 247 / 0.05)',
-    IOT:            'rgb(34 197 94 / 0.2), rgb(34 197 94 / 0.05)',
-    RESEARCH:       'rgb(6 182 212 / 0.2), rgb(6 182 212 / 0.05)',
-    DOCUMENTATION:  'rgb(245 158 11 / 0.2), rgb(245 158 11 / 0.05)',
-    DEVELOPMENT:    'rgb(249 115 22 / 0.2), rgb(249 115 22 / 0.05)',
+    SOFTWARE: 'rgb(0 185 217 / 0.2), rgb(0 185 217 / 0.05)',
+    AI_ML: 'rgb(168 85 247 / 0.2), rgb(168 85 247 / 0.05)',
+    IOT: 'rgb(34 197 94 / 0.2), rgb(34 197 94 / 0.05)',
+    RESEARCH: 'rgb(6 182 212 / 0.2), rgb(6 182 212 / 0.05)',
+    DOCUMENTATION: 'rgb(245 158 11 / 0.2), rgb(245 158 11 / 0.05)',
+    DEVELOPMENT: 'rgb(249 115 22 / 0.2), rgb(249 115 22 / 0.05)',
     INFRASTRUCTURE: 'rgb(239 68 68 / 0.2), rgb(239 68 68 / 0.05)',
-    DESIGN:         'rgb(236 72 153 / 0.2), rgb(236 72 153 / 0.05)',
-    OTHER:          'rgb(148 163 184 / 0.2), rgb(148 163 184 / 0.05)',
+    DESIGN: 'rgb(236 72 153 / 0.2), rgb(236 72 153 / 0.05)',
+    OTHER: 'rgb(148 163 184 / 0.2), rgb(148 163 184 / 0.05)',
   };
   return gradients[cat] || gradients.OTHER;
 }

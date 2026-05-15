@@ -24,6 +24,13 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum ProjectPriority {
+  URGENT
+  HIGH
+  NORMAL
+  LOW
+}
+
 enum HealthStatus {
   ON_TRACK
   AT_RISK
@@ -118,6 +125,7 @@ model Project {
   status           ProjectStatus     @default(PLANNING)
   healthStatus     HealthStatus      @default(ON_TRACK)
   visibility       ProjectVisibility @default(PUBLIC)
+  priority         ProjectPriority   @default(NORMAL)
   overallProgress  Int               @default(0)
   startDate        DateTime?
   targetDate       DateTime?

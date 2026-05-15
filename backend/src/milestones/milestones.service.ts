@@ -23,8 +23,14 @@ export class MilestonesService {
 
   async create(projectId: string, dto: CreateMilestoneDto) {
     const count = await this.prisma.milestone.count({ where: { projectId } });
+    const data: any = { ...dto, projectId, order: dto.order ?? count };
+    
+    if (data.targetDate) {
+      data.targetDate = new Date(data.targetDate).toISOString();
+    }
+    
     return this.prisma.milestone.create({
-      data: { ...dto, projectId, order: dto.order ?? count },
+      data,
     });
   }
 
@@ -42,7 +48,14 @@ export class MilestonesService {
   }
 
   async update(id: string, dto: UpdateMilestoneDto) {
-    return this.prisma.milestone.update({ where: { id }, data: dto });
+    const data: any = { ...dto };
+    if (data.targetDate) {
+      data.targetDate = new Date(data.targetDate).toISOString();
+    }
+    if (data.actualDate) {
+      data.actualDate = new Date(data.actualDate).toISOString();
+    }
+    return this.prisma.milestone.update({ where: { id }, data });
   }
 
   async remove(id: string) {
