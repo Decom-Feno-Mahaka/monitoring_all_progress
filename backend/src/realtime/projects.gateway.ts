@@ -12,7 +12,13 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
-  cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true },
+  cors: {
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'https://monitoring.golfscore.co.id',
+    ],
+    credentials: true,
+  },
   namespace: '/realtime',
 })
 export class ProjectsGateway implements OnGatewayConnection, OnGatewayDisconnect {

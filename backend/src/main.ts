@@ -5,9 +5,14 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://monitoring.golfscore.co.id',
+  ];
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: allowedOrigins,
       credentials: true,
     },
   });

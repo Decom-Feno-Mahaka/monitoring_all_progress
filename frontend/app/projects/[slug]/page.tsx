@@ -172,20 +172,18 @@ export default function PublicProjectPage({ params }: Props) {
               <div
                 className="flex items-center gap-1.5"
                 style={{
-                  color: project.status !== 'COMPLETED' && daysLeft !== null && daysLeft < 0 ? '#ef4444'
-                    : project.status !== 'COMPLETED' && daysLeft !== null && daysLeft < 14 ? '#f59e0b'
+                  color: daysLeft !== null && daysLeft < 0 ? '#ef4444'
+                    : daysLeft !== null && daysLeft < 14 ? '#f59e0b'
                       : undefined
                 }}
               >
                 <Clock size={12} />
                 <span>
-                  {project.status === 'COMPLETED'
-                    ? 'Selesai'
-                    : daysLeft !== null
-                      ? daysLeft < 0 ? `${Math.abs(daysLeft)} hari terlambat`
-                        : daysLeft === 0 ? 'Jatuh tempo hari ini'
-                          : `${daysLeft} hari tersisa`
-                      : formatDate(project.targetDate)}
+                  {daysLeft !== null
+                    ? daysLeft < 0 ? `${Math.abs(daysLeft)} hari terlambat`
+                      : daysLeft === 0 ? 'Jatuh tempo hari ini'
+                        : `${daysLeft} hari tersisa`
+                    : formatDate(project.targetDate)}
                 </span>
               </div>
             )}
