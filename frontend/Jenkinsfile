@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        IMAGE_BASE     = 'ajarka/monitoring-fe'
-        REPO           = 'https://github.com/ajarka/monitoring_all_progress.git'
+        IMAGE_BASE     = 'ayyash-decom/monitoring-fe'
+        REPO           = 'https://github.com/Decom-Feno-Mahaka/monitoring_all_progress.git'
         CRED_ID        = 'github-credentials'
         DOCKER_CRED_ID = 'dockerhub-credentials'
         DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1015454032132833443/GvU4rj-MX84Sxd9F7LUEpwYdw8JutLlWnl71P_ycuwgYfUkt0KaNGWdDrorlvs_eCcsj'
