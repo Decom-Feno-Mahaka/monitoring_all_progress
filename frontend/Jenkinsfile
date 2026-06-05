@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        IMAGE_BASE     = 'ayyash-decom/monitoring-fe'
+        IMAGE_BASE     = 'ayyashdecom/monitoring-fe'
         REPO           = 'https://github.com/Decom-Feno-Mahaka/monitoring_all_progress.git'
         CRED_ID        = 'github-credentials'
         DOCKER_CRED_ID = 'dockerhub-credentials'
