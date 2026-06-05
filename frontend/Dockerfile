@@ -20,7 +20,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
-# ─── Runner ───────────────────────────────
+# ─── Runner ────────────────────────────────
 FROM node:20-alpine AS runner
 WORKDIR /app
 
